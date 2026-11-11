@@ -51,3 +51,39 @@ describe("event photographer API", () => {
     expect(response.status).toBe(404);
   });
 });
+
+it("allows a photographer to rename their event title", async () => {
+    const response = await request(app)
+      .patch("/api/events/event-100/title")
+      .set("x-photographer-id", "studio-amber")
+      .send({ title: "New Event Title" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe("New Event Title");
+  });
+
+  it("prevents renaming an event belonging to another photographer", async () => {
+    const response = await request(app)
+      .patch("/api/events/event-200/title")
+      .set("x-photographer-id", "studio-amber")
+      .send({ title: "Hacked Title" });
+
+    expect(response.status).toBe(404);
+  });
+
+  it("requires a photographer ID header for renaming", async () => {
+    const response = await request(app)
+      .patch("/api/events/event-100/title")
+      .send({ title: "New Title" });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("validates that the new title is not empty", async () => {
+    const response = await request(app)
+      .patch("/api/events/event-100/title")
+      .set("x-photographer-id", "studio-amber")
+      .send({ title: "" });
+
+    expect(response.status).toBe(400);
+  });
