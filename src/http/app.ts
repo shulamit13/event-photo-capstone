@@ -9,7 +9,6 @@ export function createApp() {
 
   app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-  // Demo identity only. Real authentication/authorization is intentionally absent.
   app.get("/api/events", (req, res) => {
     const photographerId = req.header("x-photographer-id");
     if (!photographerId) return res.status(401).json({ error: "Missing demo photographer identity" });
@@ -51,5 +50,29 @@ export function createApp() {
     return res.status(201).json(selection);
   });
 
-  return app;
-}
+
+
+app.patch("/api/events/:id/title", (req, res) => {
+    const photographerId = req.header("x-photographer-id");
+    if (!photographerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const { title } = req.body;
+
+    if (!title || typeof title !== "string" || title.trim() === "") {
+      return res.status(400).json({ error: "Invalid title" });
+    }
+
+    const event = store.findEventForPhotographer(id, photographerId);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    event.title = title;
+    return res.status(200).json(event);
+  });
+    return app;
+
+  };
